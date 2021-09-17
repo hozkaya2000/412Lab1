@@ -12,7 +12,6 @@ public class ILOCScanner {
      */
     BufferedInputStream bufInStream;
 
-
     /**
      * Classifier table
      */
@@ -42,9 +41,9 @@ public class ILOCScanner {
 
     /**
      * The constructor for the scanner
-     * @param fileName the file to scan
+     * @param filePath the absolute file to scan
      */
-    public ILOCScanner(String fileName) {
+    public ILOCScanner(String filePath) {
         this.classifierTable = this.createClassifierTable(); // establish the classifier Table
         this.transitionTable = this.createTransitionTable(); // establish the transition table
 
@@ -54,11 +53,12 @@ public class ILOCScanner {
 
         this.langMap = createLangMap();
 
+
         try {
-            bufInStream = new BufferedInputStream(new FileInputStream(fileName), 1000); // 1 kilobyte buffer
+            bufInStream = new BufferedInputStream(new FileInputStream(filePath), 1000); // 1 kilobyte buffer
         }
-        catch (Exception ignored) {
-            System.out.println("Failed");
+        catch (Exception e) {
+            e.printStackTrace();
         }
 
     }
@@ -83,10 +83,6 @@ public class ILOCScanner {
             lexeme.append(nextChar);
             if (checkAcceptingState(state)) {
                 stateStack.clear();
-            }
-            else{
-//                if (nextChar == '\n')
-//                    System.out.println();
             }
             stateStack.push(state); // track states in the stack
 
@@ -151,11 +147,11 @@ public class ILOCScanner {
      * @return the integer representation
      */
     private int lexemeToInt(int tokenType, String lexeme) {
-        if (tokenType == 5) // if constant
+        if (tokenType == 5) // if constant store as in
             return Integer.parseInt(lexeme);
-        else if (tokenType == 6) // if register
+        else if (tokenType == 6) // if register store as int as well
             return Integer.parseInt(lexeme.substring(1));
-        else
+        else // get the mapped integer value from 0 to 11. 12 represents an error opcode
             return langMap.getOrDefault(lexeme, 12);
     }
 
@@ -179,7 +175,7 @@ public class ILOCScanner {
     /**
      * Check if the given state is an accepting state
      * @param state The state to check if accepting
-     * @return whether or not it is an accepting state
+     * @return Whether it is an accepting state
      */
     private boolean checkAcceptingState(int state) {
         return state >= 0 && tokenTypeInts[state] != 12; // 11 represents the non accepting state
@@ -263,7 +259,7 @@ public class ILOCScanner {
         cTable.put(',', 19);
         cTable.put(' ', 20); cTable.put('\t', 20); //the tab and space characters are equivalent
         cTable.put('/', 21);
-        cTable.put('\n', 22);
+        cTable.put('\n', 22); cTable.put('\r', 22);
 
         // numerical integers
         cTable.put('0', 23);

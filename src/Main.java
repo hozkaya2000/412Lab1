@@ -1,8 +1,8 @@
 public class Main {
 
     public static void main(String[] args) {
-        ILOCParser ip = new ILOCParser("C:\\Users\\silen\\IdeaProjects\\412Lab1\\src\\testFile.txt");
-        ILOCParser ip2 = new ILOCParser("C:\\Users\\silen\\IdeaProjects\\412Lab1\\src\\testFile.txt");
+        ILOCParser ip = new ILOCParser("/Users/halit/IdeaProjects/412Lab1/src/testFile.txt");
+        ILOCParser ip2 = new ILOCParser("/Users/halit/IdeaProjects/412Lab1/src/testFile.txt");
 
        try {
            ip2.ParseVisual();
@@ -15,11 +15,12 @@ public class Main {
            }
            else {
                System.out.println("Parser exited successfully");
+               ip.ShowRep();
            }
        }
-       catch (Exception ignored) {
+       catch (Exception e) {
            System.out.println("Error in parse visual");
-           ignored.printStackTrace();
+           e.printStackTrace();
        }
 
     }

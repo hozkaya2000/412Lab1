@@ -1,4 +1,6 @@
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * A class for parsing a block of ILOC code
@@ -10,19 +12,49 @@ public class ILOCParser {
      */
     private final ILOCScanner scanner;
 
-    //                                          0         1         2         3        4        5
-    String[] tokenTypeStrings = new String[] {"MEMOP", "LOADI", "ARITHOP", "OUTPUT", "NOP", "CONSTANT",
-            "REG", "COMMA", "INTO", "EOF", "COMMENT", "NEWLINE", "ERROR"};
-    //        6       7       8       9       10         11        12
+    /**
+     * The translator from integer into strings to show opcodes for output
+     */
+    private String[] opCodeStrings;
 
+    /**
+     * The IR doubly link list only valid if Parse returns -1
+     */
+    private List<Integer[]> iRep;
 
-    public ILOCParser(String fileName) {
-        scanner = new ILOCScanner(fileName);
+    /**
+     * The translator from integer into strings to show token types for output
+     */
+    String[] tokenTypeStrings;
+
+    /**
+     * Creates an ILOC Parser
+     * @param filePath the absolute path to the file to parse
+     */
+    public ILOCParser(String filePath) {
+        // create the intermediate representation as a linked list of int arrays
+        iRep = new LinkedList<>();
+
+        //                                  0         1         2         3        4        5
+        tokenTypeStrings = new String[] {"MEMOP", "LOADI", "ARITHOP", "OUTPUT", "NOP", "CONSTANT",
+                "REG", "COMMA", "INTO", "EOF", "COMMENT", "NEWLINE", "ERROR"};
+        //        6       7       8       9       10         11        12
+
+        //                              0        1        2       3      4      5        6
+        opCodeStrings = new String[] { "load", "loadI", "store", "add", "sub", "mult", "lshift",
+                "rshift", "output", "nop", ",", "=>", "NOT IN LEXEME"};
+        //         7         8        9    10    11        12
+
+        scanner = new ILOCScanner(filePath);
     }
 
-    // use this for checking that the scanner returned the correct pairs to the parser
+    /**
+     * a visual parser for checking parsing on a simple file
+     * @throws IOException in case the inputstream reader fails
+     */
     public void ParseVisual() throws IOException {
-        Integer[] next = new Integer[]{11, 12}; ;
+        System.out.println("Visual parsing: \n ");
+        Integer[] next = new Integer[]{11, 12};
         while (!tokenTypeStrings[next[0]].equals("EOF")) {
             System.out.print("" + next[0] + " " + tokenTypeStrings[next[0]] + ", " + next[1] + " \n");
             next = scanner.NextToken();
@@ -33,17 +65,18 @@ public class ILOCParser {
     /**
      * Parses the given file and checks if it follows the correct ILOC syntax
      * @return -1 if successfully parsed, line number of failed syntax if unsuccessful
-     * @throws IOException if there is a read error in the inputstream from the file
+     * @throws IOException if there is a read error in the input stream from the file
      */
     public int Parse() throws IOException {
-        int lineCount = 1; // counts the line to return where the error was
+        int lineCount = 0; // counts the line to return where the error was
 
         // start with "NEWLINE". So parser can check that each op starts with a newline.
         Integer[] nextToken = new Integer[]{11, 12};
-        while (nextToken[0] != 9 && nextToken[0] != 12) { // keep going until error or end of file
+        while (nextToken[0] != 9) { // keep going until error or end of file
+            lineCount ++; // keep track of the line for correct error production
             if (nextToken[0] != 11) { // the next ILOC statement must start on a new line 11 = "NEWLINE"
                 System.out.println("The statement does not begin on next line.");
-                return lineCount;
+                return lineCount - 1;
             }
             else {
                 nextToken = this.scanner.NextToken();
@@ -57,7 +90,7 @@ public class ILOCParser {
                     // MEMOP
                     case 0 -> {
                         //System.out.println("Reading MEMOP");
-                        if (!this.MemopCheck()) {
+                        if (!this.MemopCheck(nextToken[1])) {
                             System.out.println("Incorrect MEMOP syntax");
                             return lineCount;
                         }
@@ -65,7 +98,7 @@ public class ILOCParser {
                     // LOADI
                     case 1 -> {
                         //System.out.println("Reading LOADI");
-                        if (!this.LoadICheck()) {
+                        if (!this.LoadICheck(nextToken[1])) {
                             System.out.println("Incorrect LOADI syntax");
                             return lineCount;
                         }
@@ -73,7 +106,7 @@ public class ILOCParser {
                     // ARITHOP
                     case 2 -> {
                         //System.out.println("Reading ARITHOP");
-                        if (!this.ArithopCheck()) {
+                        if (!this.ArithopCheck(nextToken[1])) {
                             System.out.println("Incorrect ARITHOP syntax");
                             return lineCount;
                         }
@@ -81,7 +114,7 @@ public class ILOCParser {
                     // OUTPUT
                     case 3 -> {
                         //System.out.println("Reading OUTPUT");
-                        if (!this.OutputCheck()) {
+                        if (!this.OutputCheck(nextToken[1])) {
                             System.out.println("Incorrect OUTPUT syntax");
                             return lineCount;
                         }
@@ -89,7 +122,7 @@ public class ILOCParser {
                     // NOP
                     case 4 -> {
                         //System.out.println("READING NOP");
-                        if (!this.NOPCheck()) {
+                        if (!this.NOPCheck(nextToken[1])) {
                             System.out.println("Incorrect NOP syntax");
                             return lineCount;
                         }
@@ -104,11 +137,21 @@ public class ILOCParser {
                     }
                 }
             }
-            lineCount ++; // keep track of the line for correct error production
             nextToken = this.scanner.NextToken();
+            if (nextToken[0] == 12) // there has been an error word at this line
+                return lineCount;
         }
         System.out.println("End of parser. Success.");
         return -1;
+    }
+
+    /**
+     * Prints out the representation
+     */
+    public void ShowRep() {
+        for (Integer[] rep : iRep) {
+            System.out.println(" " + opCodeStrings[rep[0]] + " " + rep[1] + " " + rep[5] + " " + rep[9]);
+        }
     }
 
     /**
@@ -116,16 +159,24 @@ public class ILOCParser {
      * @return whether or not syntax is correct
      * @throws IOException if the scanner's input stream throws an exception
      */
-    private boolean MemopCheck() throws IOException{ // TODO IR Stuff
+    private boolean MemopCheck(int opCode) throws IOException{
         Integer[] nextToken = this.scanner.NextToken(); // keep this for IR stuff
+        Integer[] iRepElement = new Integer[13];
+        iRepElement[0] = opCode; // store the opCode as the first element
+
+        iRepElement[1] = nextToken[1]; // store the register number at index one
         if (nextToken[0] != 6) // check that next is REG
             return false;
 
+
         nextToken = this.scanner.NextToken();
+        // no need to store INTO
         if (nextToken[0] != 8) // check that next is INTO
             return false;
 
         nextToken = this.scanner.NextToken();
+        iRepElement[9] = nextToken[1]; // store next reg number at index 9
+        this.iRep.add(iRepElement); // add the block to the IR
         return nextToken[0] == 6; // check that next is REG
     }
 
@@ -134,43 +185,58 @@ public class ILOCParser {
      * @return whether or not syntax is correct
      * @throws IOException if the scanner's input stream throws an exception
      */
-    private boolean LoadICheck() throws IOException { // TODO IR Stuff
+    private boolean LoadICheck(int opCode) throws IOException {
         Integer[] nextToken = this.scanner.NextToken();
+        Integer[] iRepElement = new Integer[13];
+        iRepElement[0] = opCode; // store the opCode as the first element
+
+        iRepElement[1] = nextToken[1]; // store the constant
         if (nextToken[0] != 5) // check next CONSTANT
             return false;
 
         nextToken = this.scanner.NextToken();
+        // don't store into
         if (nextToken[0] != 8) // check next INTO
             return false;
 
         nextToken = this.scanner.NextToken();
+        iRepElement[9] = nextToken[1]; //store the register
+        this.iRep.add(iRepElement);
         return nextToken[0] == 6; // check next REG
     }
 
     /**
      * Check that the ARITHOP statement follows its syntax
-     * @return whether or not syntax is correct
+     * @return whether the syntax is correct
      * @throws IOException if the scanner's input stream throws an exception
      */
-    private boolean ArithopCheck() throws IOException { // TODO IR Stuff
+    private boolean ArithopCheck(int opCode) throws IOException {
         Integer[] nextToken = this.scanner.NextToken();
+        Integer[] iRepElement = new Integer[13];
+        iRepElement[0] = opCode; // store the opCode as the first element
 
+        iRepElement[1] = nextToken[1]; // store the reg
         if (nextToken[0] != 6) // check next REG
             return false;
 
         nextToken = this.scanner.NextToken();
+        // don't store comma
         if (nextToken[0] != 7) // check next COMMA
             return false;
 
         nextToken = this.scanner.NextToken();
+        iRepElement[5] = nextToken[1]; // store the next reg
         if (nextToken[0] != 6) // check next REG
             return false;
 
         nextToken = this.scanner.NextToken();
+        // don't store INTO
         if (nextToken[0] != 8) // check next INTO
             return false;
 
         nextToken = this.scanner.NextToken();
+        iRepElement[9] = nextToken[1]; // store the final reg
+        this.iRep.add(iRepElement);
         return nextToken[0] == 6; // check next REG
     }
 
@@ -179,21 +245,27 @@ public class ILOCParser {
      * @return whether or not syntax is correct
      * @throws IOException if the scanner's input stream throws an exception
      */
-    private boolean OutputCheck() throws IOException { // TODO IR Stuff
+    private boolean OutputCheck(int opCode) throws IOException {
         Integer[] nextToken = this.scanner.NextToken();
+        Integer[] iRepElement = new Integer[13];
+        iRepElement[0] = opCode; // store the opCode as the first element
 
+        iRepElement[1] = nextToken[1]; // store the constant
+        iRep.add(iRepElement);
         return nextToken[0] == 5; // check next CONSTANT
     }
 
     /**
      * Check that the NOP statement follows its syntax
      * @return whether or not syntax is correct
-     * @throws IOException if the scanner's input stream throws an exception
      */
-    private boolean NOPCheck() throws IOException { // TODO IR Stuff
-        return true;
-    }
+    private boolean NOPCheck(int opCode) {
+        Integer[] iRepElement = new Integer[13];
+        iRepElement[0] = opCode; // store the opCode as the first element
 
+        this.iRep.add(iRepElement);
+        return true; // for nop to be true the next state must be a NEWLINE. Done in Parse()
+    }
 
 
 
