@@ -119,9 +119,9 @@ public class ILOCScanner {
             this.bufInStream.mark(Integer.MAX_VALUE); //
             nextChar = (char) this.NextChar();
             lexeme.append(nextChar);
-        } while (nextChar != '\n' && nextChar != '\r' && nextChar != '\uFFFF');
+        } while (nextChar != '\n' && nextChar != '\uFFFF');
 
-        if (nextChar == '\n' || nextChar == '\r') {
+        if (nextChar == '\n') {
             this.bufInStream.reset(); // in the
         }
 
@@ -268,7 +268,7 @@ public class ILOCScanner {
         cTable.put(',', 19);
         cTable.put(' ', 20); cTable.put('\t', 20); //the tab and space characters are equivalent
         cTable.put('/', 21);
-        cTable.put('\n', 22); cTable.put('\r', 22);
+        cTable.put('\n', 22);
 
         // numerical integers
         cTable.put('0', 23);

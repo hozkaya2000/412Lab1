@@ -1,8 +1,8 @@
 public class Main {
 
     public static void main(String[] args) {
-        ILOCParser ip = new ILOCParser("/Users/halit/IdeaProjects/412Lab1/src/testFile.txt");
-        ILOCParser ip2 = new ILOCParser("/Users/halit/IdeaProjects/412Lab1/src/testFile.txt");
+        ILOCParser ip = new ILOCParser("/Users/silen/IdeaProjects/412Lab1/src/testFile.txt");
+        ILOCParser ip2 = new ILOCParser("/Users/silen/IdeaProjects/412Lab1/src/testFile.txt");
 
 
         try {
