@@ -68,15 +68,15 @@ public class ILOCParser {
      * @throws IOException if there is a read error in the input stream from the file
      */
     public int Parse() throws IOException {
-        int lineCount = 0; // counts the line to return where the error was
+        int lineCount = 1; // counts the line to return where the error was
 
         // start with "NEWLINE". So parser can check that each op starts with a newline.
         Integer[] nextToken = new Integer[]{11, 12};
-        while (nextToken[0] != 9) { // keep going until error or end of file
-            lineCount ++; // keep track of the line for correct error production
-            if (nextToken[0] != 11) { // the next ILOC statement must start on a new line 11 = "NEWLINE"
-                System.out.println("The statement does not begin on next line.");
-                return lineCount - 1;
+        while (nextToken[0] != 9) { // keep going until end of file
+            // keep track of the line for correct error production
+            if (nextToken[0] != 11 && nextToken[0] != 12) {
+                // the next ILOC statement must start on a new line 11 = "NEWLINE" (ignore errors)
+                System.out.println("" + lineCount + ": The statement does not begin on next line.");
             }
             else {
                 nextToken = this.scanner.NextToken();
@@ -91,57 +91,52 @@ public class ILOCParser {
                     case 0 -> {
                         //System.out.println("Reading MEMOP");
                         if (!this.MemopCheck(nextToken[1])) {
-                            System.out.println("Incorrect MEMOP syntax");
-                            return lineCount;
+                            System.out.println("" + lineCount + ": Incorrect MEMOP syntax");
                         }
                     }
                     // LOADI
                     case 1 -> {
                         //System.out.println("Reading LOADI");
                         if (!this.LoadICheck(nextToken[1])) {
-                            System.out.println("Incorrect LOADI syntax");
-                            return lineCount;
+                            System.out.println("" + lineCount + ": Incorrect LOADI syntax");
                         }
                     }
                     // ARITHOP
                     case 2 -> {
                         //System.out.println("Reading ARITHOP");
                         if (!this.ArithopCheck(nextToken[1])) {
-                            System.out.println("Incorrect ARITHOP syntax");
-                            return lineCount;
+                            System.out.println("" + lineCount + ": Incorrect ARITHOP syntax");
                         }
                     }
                     // OUTPUT
                     case 3 -> {
                         //System.out.println("Reading OUTPUT");
                         if (!this.OutputCheck(nextToken[1])) {
-                            System.out.println("Incorrect OUTPUT syntax");
-                            return lineCount;
+                            System.out.println("" + lineCount + ": Incorrect OUTPUT syntax");
                         }
                     }
                     // NOP
                     case 4 -> {
                         //System.out.println("READING NOP");
                         if (!this.NOPCheck(nextToken[1])) {
-                            System.out.println("Incorrect NOP syntax");
-                            return lineCount;
+                            System.out.println("" + lineCount + ": Incorrect NOP syntax");
                         }
                     }
                     // EOF
                     case 9 -> {
                         // IF EOF reached on the beginning of a newline, just ignore
                     }
-                    default -> {
-                        System.out.println("Statement must start with an Opcode");
-                        return lineCount;
-                    }
+                    default -> System.out.println("" + lineCount + ": Statement must start with an Opcode");
                 }
             }
             nextToken = this.scanner.NextToken();
-            if (nextToken[0] == 12) // there has been an error word at this line
-                return lineCount;
+            if (nextToken[0] == 12) {// there has been an error word at this line
+                System.out.println("" + lineCount + ": Unknown word at end of line");
+            }
+            else if(nextToken[0] == 11)
+                lineCount ++;
         }
-        System.out.println("End of parser. Success.");
+        System.out.println("End of parsing.");
         return -1;
     }
 

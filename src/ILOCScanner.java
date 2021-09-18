@@ -111,10 +111,19 @@ public class ILOCScanner {
                             lexemeToInt(tokenTypeInts[state], lexeme.toString().trim())};
         }
 
+        /*
+         * In the error case, read to the end of the ine
+         */
+
         do {
+            this.bufInStream.mark(Integer.MAX_VALUE); //
             nextChar = (char) this.NextChar();
             lexeme.append(nextChar);
-        } while (nextChar != '\n' && nextChar != '\uFFFF');
+        } while (nextChar != '\n' && nextChar != '\r' && nextChar != '\uFFFF');
+
+        if (nextChar == '\n' || nextChar == '\r') {
+            this.bufInStream.reset(); // in the
+        }
 
 
         return new Integer[]{12, -1}; // The ERROR token is returned
