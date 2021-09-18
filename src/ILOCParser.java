@@ -40,14 +40,20 @@ public class ILOCParser {
     boolean errNlEnd;
 
     /**
+     * Whether or not to print the IR
+     */
+    boolean printIR;
+
+    /**
      * Creates an ILOC Parser
      *
      * @param filePath the absolute path to the file to parse
      */
-    public ILOCParser(String filePath) {
+    public ILOCParser(String filePath, boolean printTokens, boolean printIR) {
         // create the intermediate representation as a linked list of int arrays
         iRep = new LinkedList<>();
         errNlEnd = false;
+        this.printIR = printIR;
 
         //                                  0         1         2         3        4        5
         tokenTypeStrings = new String[]{"MEMOP", "LOADI", "ARITHOP", "OUTPUT", "NOP", "CONSTANT",
@@ -59,7 +65,7 @@ public class ILOCParser {
                 "rshift", "output", "nop", ",", "=>", "NOT IN LEXEME"};
         //         7         8        9    10    11        12
 
-        scanner = new ILOCScanner(filePath);
+        scanner = new ILOCScanner(filePath, printTokens);
     }
 
     /**
@@ -77,13 +83,22 @@ public class ILOCParser {
         System.out.println("" + next[0] + " " + tokenTypeStrings[next[0]] + ", " + next[1]);
     }
 
+    public void Parse() {
+        try {
+            ParseException();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+
     /**
      * Parses the given file and checks if it follows the correct ILOC syntax
-     *
-     * @return -1 if successfully parsed, line number of failed syntax if unsuccessful
+     *\
      * @throws IOException if there is a read error in the input stream from the file
      */
-    public boolean Parse() throws IOException {
+    private void ParseException() throws IOException {
         boolean success = true;
         lineCount = 1; // counts the line to return where the error was
 
@@ -151,7 +166,10 @@ public class ILOCParser {
                 }
             }
         }
-        return success;
+        if (this.printIR)
+            this.ShowRep();
+        if (success)
+            System.out.println("Success parsing the ILOC file");
     }
 
     /**
@@ -176,7 +194,7 @@ public class ILOCParser {
 
         iRepElement[1] = nextToken[1]; // store the register number at index one
         if (nextToken[0] != 6) {// check that next is REG
-            if (nextToken[0] == 11)
+            if (nextToken[0] == 11 || nextToken[0] == 10)
                 errNlEnd = true;
             return false;
         }
@@ -184,7 +202,7 @@ public class ILOCParser {
         nextToken = this.scanner.NextToken();
         // no need to store INTO
         if (nextToken[0] != 8) { // check that next is INTO
-            if (nextToken[0] == 11)
+            if (nextToken[0] == 11 || nextToken[0] == 10)
                 errNlEnd = true;
             return false;
         }
@@ -193,13 +211,13 @@ public class ILOCParser {
         iRepElement[9] = nextToken[1]; // store next reg number at index 9
         this.iRep.add(iRepElement); // add the block to the IR
         if (nextToken[0] != 6) { // check that next is REG
-            if (nextToken[0] == 11)
+            if (nextToken[0] == 11 || nextToken[0] == 10)
                 errNlEnd = true;
             return false;
         }
 
         nextToken = this.scanner.NextToken();
-        return nextToken[0] == 11; // check ends with nextline
+        return nextToken[0] == 11 || nextToken[0] == 9 || nextToken[0] == 10; // check ends with nextline
     }
 
     /**
@@ -215,7 +233,7 @@ public class ILOCParser {
 
         iRepElement[1] = nextToken[1]; // store the constant
         if (nextToken[0] != 5) {// check next CONSTANT
-            if (nextToken[0] == 11)
+            if (nextToken[0] == 11 || nextToken[0] == 10)
                 errNlEnd = true;
             return false;
         }
@@ -223,7 +241,7 @@ public class ILOCParser {
         nextToken = this.scanner.NextToken();
         // don't store into
         if (nextToken[0] != 8) { // check next INTO
-            if (nextToken[0] == 11)
+            if (nextToken[0] == 11 || nextToken[0] == 10)
                 errNlEnd = true;
             return false;
         }
@@ -232,13 +250,13 @@ public class ILOCParser {
         iRepElement[9] = nextToken[1]; //store the register
         this.iRep.add(iRepElement);
         if(nextToken[0] != 6) { // check next REG
-            if (nextToken[0] == 11)
+            if (nextToken[0] == 11 || nextToken[0] == 10)
                 errNlEnd = true;
             return false;
         }
 
         nextToken = this.scanner.NextToken();
-        return nextToken[0] == 11; // check ends with nextline
+        return nextToken[0] == 11 || nextToken[0] == 9 || nextToken[0] == 10; // check ends with nextline
     }
 
     /**
@@ -254,7 +272,7 @@ public class ILOCParser {
 
         iRepElement[1] = nextToken[1]; // store the reg
         if (nextToken[0] != 6) {// check next REG
-            if (nextToken[0] == 11)
+            if (nextToken[0] == 11 || nextToken[0] == 10)
                 errNlEnd = true;
             return false;
         }
@@ -262,7 +280,7 @@ public class ILOCParser {
         nextToken = this.scanner.NextToken();
         // don't store comma
         if (nextToken[0] != 7) { // check next COMMA
-            if (nextToken[0] == 11)
+            if (nextToken[0] == 11 || nextToken[0] == 10)
                 errNlEnd = true;
             return false;
         }
@@ -271,7 +289,7 @@ public class ILOCParser {
         nextToken = this.scanner.NextToken();
         iRepElement[5] = nextToken[1]; // store the next reg
         if (nextToken[0] != 6) {// check next REG
-            if (nextToken[0] == 11)
+            if (nextToken[0] == 11 || nextToken[0] == 10)
                 errNlEnd = true;
             return false;
         }
@@ -279,7 +297,7 @@ public class ILOCParser {
         nextToken = this.scanner.NextToken();
         // don't store INTO
         if (nextToken[0] != 8){ // check next INTO
-            if (nextToken[0] == 11)
+            if (nextToken[0] == 11 || nextToken[0] == 10)
                 errNlEnd = true;
             return false;
         }
@@ -288,13 +306,13 @@ public class ILOCParser {
         iRepElement[9] = nextToken[1]; // store the final reg
         this.iRep.add(iRepElement);
         if (nextToken[0] != 6) { // check next REG
-            if (nextToken[0] == 11)
+            if (nextToken[0] == 11 || nextToken[0] == 10)
                 errNlEnd = true;
             return false;
         }
 
         nextToken = this.scanner.NextToken();
-        return nextToken[0] == 11; // check ends with nextline
+        return nextToken[0] == 11 || nextToken[0] == 9 || nextToken[0] == 10; // check ends with nextline
     }
 
     /**
@@ -311,13 +329,13 @@ public class ILOCParser {
         iRepElement[1] = nextToken[1]; // store the constant
         iRep.add(iRepElement);
         if (nextToken[0] != 5) {// check next CONSTANT
-            if (nextToken[0] == 11)
+            if (nextToken[0] == 11 || nextToken[0] == 10)
                 errNlEnd = true;
             return false;
         }
 
         nextToken = this.scanner.NextToken();
-        return nextToken[0] == 11; // check ends with nextline
+        return nextToken[0] == 11 || nextToken[0] == 9 || nextToken[0] == 10; // check ends with nextline
     }
 
     /**
@@ -331,7 +349,8 @@ public class ILOCParser {
         iRepElement[0] = opCode; // store the opCode as the first element
         this.iRep.add(iRepElement);
 
-        return this.scanner.NextToken()[0] == 11; // check that nextline
+        Integer[] nextToken = this.scanner.NextToken();
+        return nextToken[0] == 11 || nextToken[0] == 9 || nextToken[0] == 10; // check ends with nextline
     }
 
 

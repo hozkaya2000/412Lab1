@@ -8,14 +8,55 @@ public class Main {
      */
     public static void main(String[] args) {
 
-
-        selfTest();
-//        if (inArgs("-h", args)) {
-//            showCommandLineInfo();
-//            if (args.length > 1) {
-//                System.err.println("");
-//            }
-//        }
+        // process the args and run
+        String filePath;
+        ILOCParser parser;
+        int filePathInd = 1;
+        if (inArgs("-h", args)) {
+            showCommandLineInfo();
+            if (args.length > 1) {
+                System.err.println("Please only use one command argument at a time");
+            }
+        }
+        else if(inArgs("-r", args)){
+            if (inArgs("-p", args) ){
+                filePathInd ++;
+                if (inArgs("-s", args))
+                    filePathInd ++;
+                System.err.println("Please use only one command argument at a time");
+            }
+            if (args.length < 2)
+                System.err.println("Please specify the file name");
+            else {
+                filePath = args[filePathInd];
+                parser = new ILOCParser(filePath, false, true);
+                parser.Parse();
+            }
+        }
+        else if (inArgs("-p", args)){
+            if (inArgs("-s", args)) {
+                filePathInd ++;
+                System.err.println("Please use only one command argument at a time");
+            }
+            if (args.length < 2) {
+                System.err.println("Please specify the file name");
+            }
+            else {
+                filePath = args[filePathInd];
+                parser = new ILOCParser(filePath, false, false);
+                parser.Parse();
+            }
+        }
+        else if(inArgs("-s", args)) {
+            if (args.length < 2) {
+                System.err.println("Please specify the file name");
+            }
+            else {
+                filePath = args[1];
+                parser = new ILOCParser(filePath, true, false);
+                parser.Parse();
+            }
+        }
 
     }
 
@@ -31,7 +72,6 @@ public class Main {
         }
         return false;
     }
-
 
     private static void showCommandLineInfo() {
         System.out.print("""
@@ -64,28 +104,16 @@ public class Main {
                 """);
     }
 
+
+
     /**
      * For the simplest form of testing that I tried before testing thoroughly.
      */
     private static void selfTest() {
-        ILOCParser ip = new ILOCParser("/Users/silen/IdeaProjects/412Lab1/src/testFile.txt");
-        ILOCParser ip2 = new ILOCParser("/Users/silen/IdeaProjects/412Lab1/src/testFile.txt");
+        ILOCParser ip = new ILOCParser("/Users/silen/IdeaProjects/412Lab1/src/testFile.txt", false, true);
+        ILOCParser ip2 = new ILOCParser("/Users/silen/IdeaProjects/412Lab1/src/testFile.txt", false, false);
 
 
-        try {
-            System.out.println("Visual parsing:");
-            ip2.ParseVisual();
-
-            System.out.println("\nNow for actual parsing : \n");
-
-            boolean ipLine = ip.Parse();
-            if (ipLine) {
-                System.out.println("Success");
-            }
-        }
-        catch (Exception e) {
-            System.out.println("Error in parse");
-            e.printStackTrace();
-        }
+        ip.Parse();
     }
 }

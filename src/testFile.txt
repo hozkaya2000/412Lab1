@@ -1,0 +1,10 @@
+sub r1223, r123 => r1
+//ads;flkja
+//asd;lf
+sub //;asldkjf
+
+;asdf
+
+loadI 123 => r123 // this comment is ignored mesela
+
+poop
