@@ -106,10 +106,13 @@ public class ILOCScanner {
 
         // if an accepting state, return the token type and the lexeme
         if (checkAcceptingState(state)) {
+            System.out.println(tokenTypeStrings[tokenTypeInts[state]]);
             return new Integer[]
                     {tokenTypeInts[state],
                             lexemeToInt(tokenTypeInts[state], lexeme.toString().trim())};
         }
+
+        System.out.println(tokenTypeStrings[12]);
 
         /*
          * In the error case, read to the end of the ine
