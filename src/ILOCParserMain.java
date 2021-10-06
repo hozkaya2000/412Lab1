@@ -1,6 +1,7 @@
-import java.util.Arrays;
-
-public class Main {
+/**
+ * This is the main function of the ILOC Parser for lab 1
+ */
+public class ILOCParserMain {
 
     /**
      * The main method of the program
@@ -74,34 +75,30 @@ public class Main {
     }
 
     private static void showCommandLineInfo() {
-        System.out.print("""
-                
-                How to use the ILOC Parser:\s
-                ======================================================================
-                412fe -h
-                -----------
-                When a -h flag is detected, 412fe will produce a list of valid command
-                line arguments as well as their description. 412fe is not required to
-                process command line arguments that appear after the -h flag
-                ======================================================================
-                412fe -s <file name>
-                -----------
-                When a -s flag is detected, 412fe reads the file specified and prints 
-                a list of the tokens that the scanner found
-                ======================================================================
-                412fe -p <file name>
-                -----------
-                When a -p flag is detected, 412 reads the file specified, scans it and
-                parses it, builds the intermediate representation, and reports either
-                success or reports all of the errors that it finds in the input
-                ======================================================================
-                412fe -r <file name>
-                -----------
-                When a -r flag is detected, 412fe reads the file specified, scanst it,
-                parses it, builds the intermediate representation, and prints out the 
-                info in the intermediate representation
-                
-                """);
+        System.out.print(" How to use the ILOC Parser:\n " +
+                "======================================================================\n" +
+                "412fe -h\n" +
+                "-----------\n" +
+                "When a -h flag is detected, 412fe will produce a list of valid command\n" +
+                "line arguments as well as their description. 412fe is not required to\n" +
+                "process command line arguments that appear after the -h flag\n" +
+                "======================================================================\n" +
+                "412fe -s <file name>\n" +
+                "-----------\n" +
+                "When a -s flag is detected, 412fe reads the file specified and prints\n" +
+                "a list of the tokens that the scanner found\n" +
+                "======================================================================\n" +
+                "412fe -p <file name>\n" +
+                "-----------\n" +
+                "When a -p flag is detected, 412 reads the file specified, scans it and\n" +
+                "parses it, builds the intermediate representation, and reports either\n" +
+                "success or reports all of the errors that it finds in the input\n" +
+                "======================================================================\n" +
+                "412fe -r <file name>\n" +
+                "-----------\n" +
+                "When a -r flag is detected, 412fe reads the file specified, scanst it,\n" +
+                "parses it, builds the intermediate representation, and prints out the\n" +
+                "info in the intermediate representation\n");
     }
 
 
@@ -110,8 +107,7 @@ public class Main {
      * For the simplest form of testing that I tried before testing thoroughly.
      */
     private static void selfTest() {
-        ILOCParser ip = new ILOCParser("/Users/silen/IdeaProjects/412Lab1/src/testFile.txt", false, true);
-        ILOCParser ip2 = new ILOCParser("/Users/silen/IdeaProjects/412Lab1/src/testFile.txt", false, false);
+        ILOCParser ip = new ILOCParser("/storage-home/h/ho8/comp412/lab1/412Lab1/src/ILOCTest.txt", false, true);
 
 
         ip.Parse();

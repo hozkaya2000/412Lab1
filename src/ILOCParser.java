@@ -18,7 +18,7 @@ public class ILOCParser {
     private String[] opCodeStrings;
 
     /**
-     * The IR doubly link list only valid if Parse returns -1
+     * The IR -- a doubly linked list of arrays
      */
     private List<Integer[]> iRep;
 
@@ -45,44 +45,53 @@ public class ILOCParser {
     boolean printIR;
 
     /**
+     * Stores the line of the last printed error
+     * To prevent duplicate error printing.
+     */
+    int lastErrorLine;
+
+    /**
+     * Total ILOC Operations
+     */
+    int totalOps;
+
+    /**
      * Creates an ILOC Parser
      *
      * @param filePath the absolute path to the file to parse
      */
     public ILOCParser(String filePath, boolean printTokens, boolean printIR) {
         // create the intermediate representation as a linked list of int arrays
-        iRep = new LinkedList<>();
-        errNlEnd = false;
+        this.iRep = new LinkedList<>();
+        this.errNlEnd = false;
         this.printIR = printIR;
+        this.totalOps = 0;
 
         //                                  0         1         2         3        4        5
-        tokenTypeStrings = new String[]{"MEMOP", "LOADI", "ARITHOP", "OUTPUT", "NOP", "CONSTANT",
+        this.tokenTypeStrings = new String[]{"MEMOP", "LOADI", "ARITHOP", "OUTPUT", "NOP", "CONSTANT",
                 "REG", "COMMA", "INTO", "EOF", "COMMENT", "NEWLINE", "ERROR"};
         //        6       7       8       9       10         11        12
 
         //                              0        1        2       3      4      5        6
-        opCodeStrings = new String[]{"load", "loadI", "store", "add", "sub", "mult", "lshift",
+        this.opCodeStrings = new String[]{"load", "loadI", "store", "add", "sub", "mult", "lshift",
                 "rshift", "output", "nop", ",", "=>", "NOT IN LEXEME"};
         //         7         8        9    10    11        12
 
-        scanner = new ILOCScanner(filePath, printTokens);
+        this.scanner = new ILOCScanner(filePath, printTokens);
     }
 
     /**
-     * a visual parser for checking parsing on a simple file
-     *
-     * @throws IOException in case the inputstream reader fails
+     * Parses and gets the intermediate representation
+     * Either Parse or ParseException method must have been run before to use this.
+     * @return the intermediate representation created by this parser.
      */
-    public void ParseVisual() throws IOException {
-        System.out.println("Visual parsing: \n ");
-        Integer[] next = new Integer[]{11, 12};
-        while (!tokenTypeStrings[next[0]].equals("EOF")) {
-            System.out.print("" + next[0] + " " + tokenTypeStrings[next[0]] + ", " + next[1] + " \n");
-            next = scanner.NextToken();
-        }
-        System.out.println("" + next[0] + " " + tokenTypeStrings[next[0]] + ", " + next[1]);
+    public List<Integer[]> ParseAndGetRep() {
+        return iRep;
     }
 
+    /**
+     * Parses cleanly without an exception to stop the program
+     */
     public void Parse() {
         try {
             ParseException();
@@ -100,7 +109,7 @@ public class ILOCParser {
      */
     private void ParseException() throws IOException {
         boolean success = true;
-        lineCount = 1; // counts the line to return where the error was
+        this.lineCount = 1; // counts the line to return where the error was
 
         // start with "NEWLINE". So parser can check that each op starts with a newline.
         Integer[] nextToken = new Integer[]{-1, -1};
@@ -112,64 +121,92 @@ public class ILOCParser {
             // add reg and constant case
             switch (nextToken[0]) {
                 // MEMOP
-                case 0 -> {
+                case 0 :
                     if (!this.MemopCheck(nextToken[1])) {
-                        System.err.println("" + lineCount + ": Incorrect MEMOP syntax");
+                        if (this.lastErrorLine != this.lineCount)
+                            System.err.println("" + this.lineCount + ": Incorrect MEMOP syntax");
+                        this.lastErrorLine = this.lineCount;
                         success = false;
-                    } else
-                        lineCount++;
-                }
+                    } else {
+                        this.lineCount++;
+                        this.totalOps++;
+                    }
+
+                    break;
                 // LOADI
-                case 1 -> {
+                case 1 :
                     if (!this.LoadICheck(nextToken[1])) {
-                        System.err.println("" + lineCount + ": Incorrect LOADI syntax");
+                        if (this.lastErrorLine != this.lineCount)
+                            System.err.println("" + this.lineCount + ": Incorrect LOADI syntax");
+                        this.lastErrorLine = this.lineCount;
                         success = false;
-                    } else
-                        lineCount++;
-                }
+                    } else {
+                        this.lineCount++;
+                        this.totalOps++;
+                    }
+                    break;
                 // ARITHOP
-                case 2 -> {
+                case 2 :
                     if (!this.ArithopCheck(nextToken[1])) {
-                        System.err.println("" + lineCount + ": Incorrect ARITHOP syntax");
+                        if (this.lastErrorLine != this.lineCount)
+                            System.err.println("" + this.lineCount + ": Incorrect ARITHOP syntax");
+                        this.lastErrorLine = this.lineCount;
                         success = false;
-                    } else
-                        lineCount++;
-                }
+                    } else {
+                        this.lineCount++;
+                        this.totalOps++;
+                    }
+                    break;
                 // OUTPUT
-                case 3 -> {
+                case 3 :
                     if (!this.OutputCheck(nextToken[1])) {
-                        System.err.println("" + lineCount + ": Incorrect OUTPUT syntax");
+                        if (this.lastErrorLine != this.lineCount)
+                            System.err.println("" + this.lineCount + ": Incorrect OUTPUT syntax");
+                        this.lastErrorLine = this.lineCount;
                         success = false;
-                    } else
-                        lineCount++;
-                }
+                    } else {
+                        this.lineCount++;
+                        this.totalOps++;
+                    }
+                    break;
                 // NOP
-                case 4 -> {
+                case 4 :
                     if (!this.NOPCheck(nextToken[1])) {
-                        System.err.println("" + lineCount + ": Incorrect NOP syntax");
+                        if (this.lastErrorLine != this.lineCount)
+                            System.err.println("" + this.lineCount + ": Incorrect NOP syntax");
+                        this.lastErrorLine = this.lineCount;
                         success = false;
-                    } else
-                        lineCount++;
-                }
+                    } else {
+                        this.lineCount++;
+                        this.totalOps++;
+                    }
+                    break;
                 // EOF
-                case 9 -> {
+                case 9 :
                     // IF EOF reached on the beginning of a newline, just ignore
-                }
-                case 10, 11 -> lineCount++;
-                default -> {
+                    break;
+                case 10:
+                    this.lineCount++;
+                    break;
+                case 11:
+                    this.lineCount++;
+                    break;
+                default :
                     if (errNlEnd) {
                         lineCount ++;
                         errNlEnd = false;
                     }
-                    System.err.println("" + lineCount + ": Statement must start with an Opcode");
+                    if (this.lastErrorLine != this.lineCount)
+                        System.err.println("" + this.lineCount + ": Statement must start with an Opcode");
+                    this.lastErrorLine = this.lineCount;
                     success = false;
-                }
+                    break;
             }
         }
         if (this.printIR)
             this.ShowRep();
         if (success)
-            System.out.println("Success parsing the ILOC file");
+            System.out.println("Parse success with " + this.totalOps + " operations total.");
     }
 
     /**
